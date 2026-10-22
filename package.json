@@ -1,0 +1,43 @@
+{
+  "name": "speedview-for-canvas",
+  "description": "View code, notebooks, and archives directly in Canvas SpeedGrader. Everything stays in your browser.",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:chrome": "wxt build -b chrome",
+    "build:firefox": "wxt build -b firefox",
+    "build:safari": "wxt build -b safari",
+    "zip:all": "wxt zip -b chrome && wxt zip -b firefox",
+    "typecheck": "tsc --noEmit",
+    "check:external": "node scripts/check-no-external.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "test": "vitest run",
+    "build:e2e": "cross-env SPEEDVIEW_E2E=1 wxt build -b chrome",
+    "test:e2e": "npm run build:e2e && playwright test",
+    "fixture": "tsx tests/e2e/serve.ts",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/jsdom": "^30.0.0",
+    "cross-env": "^10.1.0",
+    "jsdom": "^30.1.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5",
+    "wxt": "^0.21.4"
+  },
+  "dependencies": {
+    "docx-preview": "^0.4.1",
+    "dompurify": "^3.4.17",
+    "fflate": "^0.8.3",
+    "highlight.js": "^11.12.0",
+    "jszip": "^3.10.2",
+    "marked": "^18.1.1",
+    "pdfjs-dist": "^6.4.299"
+  }
+}

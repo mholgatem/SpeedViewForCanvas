@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SpeedView</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <button id="toggle-tree" class="icon" title="Show or hide the file list" aria-pressed="true">☰</button>
+      <select id="attempt" title="Submission attempt" hidden></select>
+      <span id="status" class="status"></span>
+      <span class="spacer"></span>
+      <button id="open-settings" class="icon" title="SpeedView settings">⚙</button>
+      <button id="close" class="icon" title="Close (Esc)">✕</button>
+    </header>
+    <div class="body">
+      <nav id="tree" class="tree" aria-label="Submission files"></nav>
+      <main class="content">
+        <div id="toolbar" class="toolbar" hidden>
+          <div class="file-meta">
+            <span id="file-path" class="path"></span>
+            <span id="file-info" class="info"></span>
+          </div>
+          <div class="actions">
+            <select id="language" title="Highlighting language" hidden></select>
+            <button id="mode" hidden></button>
+            <button id="wrap" title="Wrap long lines" aria-pressed="false">Wrap</button>
+            <button id="font-down" title="Smaller text">−</button>
+            <button id="font-up" title="Larger text">+</button>
+            <button id="copy" title="Copy file contents">Copy</button>
+            <button id="download" title="Save this file">Download</button>
+          </div>
+        </div>
+        <div id="view" class="view"></div>
+      </main>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SpeedView Settings</title>
+    <meta name="manifest.open_in_tab" content="true" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>SpeedView for Canvas</h1>
+        <p class="muted">Settings are saved automatically.</p>
+      </header>
+
+      <section id="setup-banner" class="banner" hidden>
+        <strong>Welcome!</strong> Add your school's Canvas address below (for example
+        <code>canvas.asu.edu</code>) so SpeedView can run in SpeedGrader.
+      </section>
+
+      <section>
+        <h2>Canvas sites</h2>
+        <p class="muted">
+          SpeedView only runs on the SpeedGrader pages of these sites. Your browser will ask you to
+          approve access when you add one.
+        </p>
+        <ul id="domain-list" class="domain-list"></ul>
+        <form id="domain-form" class="row">
+          <input id="domain-input" type="text" placeholder="canvas.yourschool.edu" autocomplete="off" spellcheck="false" />
+          <button type="submit">Add site</button>
+        </form>
+        <p id="domain-error" class="error" hidden></p>
+      </section>
+
+      <section>
+        <h2>Appearance</h2>
+        <div class="grid">
+          <label for="theme">Theme</label>
+          <select id="theme" data-setting="theme">
+            <option value="auto">Match system</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <label for="fontSize">Font size (px)</label>
+          <input id="fontSize" type="number" min="8" max="32" data-setting="fontSize" />
+          <label for="tabWidth">Tab width</label>
+          <input id="tabWidth" type="number" min="1" max="16" data-setting="tabWidth" />
+          <label for="wrap">Wrap long lines</label>
+          <input id="wrap" type="checkbox" data-setting="wrap" />
+          <label for="lineNumbers">Line numbers</label>
+          <input id="lineNumbers" type="checkbox" data-setting="lineNumbers" />
+        </div>
+      </section>
+
+      <section>
+        <h2>Behavior</h2>
+        <div class="grid">
+          <label for="autoOpen">Open the drawer automatically in SpeedGrader</label>
+          <input id="autoOpen" type="checkbox" data-setting="autoOpen" />
+          <label for="drawerSide">Drawer side</label>
+          <select id="drawerSide" data-setting="drawerSide">
+            <option value="left">Left (keeps the grading panel visible)</option>
+            <option value="right">Right</option>
+          </select>
+          <label for="confirmSizeMB">Ask before loading files larger than (MB)</label>
+          <input id="confirmSizeMB" type="number" min="1" max="1000" data-setting="confirmSizeMB" />
+          <label for="highlightMaxKB">Skip syntax highlighting above (KB)</label>
+          <input id="highlightMaxKB" type="number" min="16" max="20480" data-setting="highlightMaxKB" />
+          <label for="archiveMaxEntries">Max files per archive</label>
+          <input id="archiveMaxEntries" type="number" min="10" max="100000" data-setting="archiveMaxEntries" />
+          <label for="archiveMaxTotalMB">Max unpacked archive size (MB)</label>
+          <input id="archiveMaxTotalMB" type="number" min="1" max="2000" data-setting="archiveMaxTotalMB" />
+          <label for="archiveMaxDepth">Max nested archive depth</label>
+          <input id="archiveMaxDepth" type="number" min="0" max="10" data-setting="archiveMaxDepth" />
+        </div>
+      </section>
+
+      <section>
+        <h2>Language overrides</h2>
+        <p class="muted">
+          Map a file extension to a highlighting language, one per line, e.g. <code>pde = java</code>.
+        </p>
+        <textarea id="languageOverrides" rows="5" spellcheck="false"></textarea>
+        <p id="overrides-error" class="error" hidden></p>
+      </section>
+
+      <section>
+        <h2>Waveform layouts</h2>
+        <p class="muted">
+          GTKWave signal lists you saved in the waveform viewer, by assignment. They hold only signal
+          names and display settings, and stay in this browser. Delete them when you no longer need them.
+        </p>
+        <div id="layouts" class="layouts"></div>
+      </section>
+
+      <section>
+        <h2>Privacy</h2>
+        <p>
+          SpeedView never sends student data anywhere. Files are downloaded straight from your Canvas
+          site, viewed in memory, and discarded when you close them. There are no analytics, no
+          external servers, and no remotely loaded code. Only the settings on this page (including any
+          waveform layouts you save) are stored.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
