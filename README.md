@@ -7,7 +7,7 @@ Canvas' built-in SpeedGrader can only preview a few file types. Anything else (P
 - **Zip archives:** view the contents of `.zip`, `.tar`, `.tar.gz`/`.tgz`, and `.gz` without downloading or unzipping, including nested archives.
 - **Source code** with syntax highlighting and line numbers: Python, Verilog/SystemVerilog, VHDL, C/C++, Java, JavaScript/TypeScript, assembly (MIPS/ARM/x86/AVR), Tcl/XDC, MATLAB, R, Rust, Go, and many more.
 - **Jupyter notebooks** with code, markdown, outputs, and plots.
-- **Markdown** (rendered or source), **CSV/TSV** tables, **images**, and **PDFs**.
+- **Markdown** (rendered or source), **CSV/TSV** tables, **images**, and **PDFs**. Sideways images and scans can be rotated, a whole PDF at once or one page at a time.
 - **Word documents** (`.docx`), including ones inside zip files, with formatting, tables, images, and equations.
 - **Excel workbooks** (`.xlsx`) with cell formatting, number formats, merged cells, and sheet tabs. Click a cell to see its formula, or show all formulas at once.
 - **PowerPoint presentations** (`.pptx`, experimental): each slide drawn with its layout, pictures, text styles, shapes, tables, equations, and SmartArt, plus speaker notes. Charts appear as their data. A text-outline mode lists each slide's content in reading order. Hidden slides are marked.

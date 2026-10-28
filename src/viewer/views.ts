@@ -105,13 +105,45 @@ export function renderCsvView(container: HTMLElement, text: string, delimiter: s
   container.append(wrap);
 }
 
-export function renderImage(container: HTMLElement, url: string, name: string): void {
+export interface ImageView {
+  /** Turn the image to `degrees` clockwise (a multiple of 90). */
+  setRotation(degrees: number): void;
+}
+
+/**
+ * An image scaled to fit the width. Once its size is known, the frame takes the rotated
+ * image's proportions and the image is turned inside it, so a sideways photo still fits.
+ */
+export function renderImage(container: HTMLElement, url: string, name: string, rotation = 0): ImageView {
   const img = el('img', 'image-view');
-  img.src = url;
   img.alt = name;
+  const frame = el('div', 'image-frame');
+  frame.append(img);
   const wrap = el('div', 'image-wrap checkerboard');
-  wrap.append(img);
+  wrap.append(frame);
   container.append(wrap);
+
+  const apply = () => {
+    const quarter = rotation % 180 !== 0;
+    const { naturalWidth: w, naturalHeight: h } = img;
+    frame.style.setProperty('--rotation', `${rotation}deg`);
+    frame.classList.toggle('quarter', quarter);
+    // Some SVGs have no intrinsic size; those just turn in place.
+    frame.classList.toggle('sized', w > 0 && h > 0);
+    if (w > 0 && h > 0) {
+      frame.style.width = `${quarter ? h : w}px`;
+      frame.style.aspectRatio = quarter ? `${h} / ${w}` : `${w} / ${h}`;
+    }
+  };
+  img.addEventListener('load', apply);
+  img.src = url;
+  apply();
+  return {
+    setRotation(degrees) {
+      rotation = degrees;
+      apply();
+    },
+  };
 }
 
 export function renderHex(container: HTMLElement, bytes: Uint8Array): void {

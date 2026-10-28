@@ -46,6 +46,7 @@ const ui = {
   language: $<HTMLSelectElement>('language'),
   mode: $<HTMLButtonElement>('mode'),
   wrap: $<HTMLButtonElement>('wrap'),
+  rotate: $<HTMLButtonElement>('rotate'),
   copy: $<HTMLButtonElement>('copy'),
   smaller: $<HTMLButtonElement>('font-down'),
   larger: $<HTMLButtonElement>('font-up'),
@@ -72,6 +73,10 @@ let languageOverride: string | null = null;
 let currentText: DecodedText | null = null;
 let blobUrls: string[] = [];
 let zoomView: ZoomableView | null = null;
+/** The open image or PDF, when it can be rotated. */
+let rotatable: { rotate(): void } | null = null;
+/** Clockwise turns the grader gave each file (per PDF page), kept while on this student. */
+const rotations = new Map<string, number[]>();
 let zoom = 1;
 /** Bumped whenever the view is cleared, so slow async renders know they're stale. */
 let viewToken = 0;
@@ -146,6 +151,7 @@ function resetSubmission(gen: number) {
   roots = [];
   selected = null;
   confirmedLarge.clear();
+  rotations.clear();
   ui.attempt.hidden = true;
   renderTree();
   clearView();
@@ -294,6 +300,7 @@ function clearView() {
   blobUrls = [];
   zoomView?.destroy();
   zoomView = null;
+  rotatable = null;
   currentText = null;
   ui.view.replaceChildren();
   ui.toolbar.hidden = true;
@@ -308,6 +315,18 @@ function blobUrl(bytes: Uint8Array, type: string): string {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type }));
   blobUrls.push(url);
   return url;
+}
+
+function rotationsFor(node: FileNode): number[] {
+  let turns = rotations.get(node.id);
+  if (!turns) rotations.set(node.id, (turns = []));
+  return turns;
+}
+
+function showImage(node: FileNode, url: string) {
+  const turns = rotationsFor(node);
+  const image = renderImage(ui.view, url, node.name, turns[0] ?? 0);
+  rotatable = { rotate: () => image.setRotation((turns[0] = ((turns[0] ?? 0) + 90) % 360)) };
 }
 
 function viewKind(node: FileNode, bytes: Uint8Array, text: DecodedText | null): FileKind | 'svg' {
@@ -332,6 +351,7 @@ function renderSelected() {
   ui.language.hidden = true;
   const isTextView = kind === 'code' || showSource;
   ui.wrap.hidden = !isTextView;
+  ui.rotate.hidden = showSource || !(kind === 'image' || kind === 'svg' || kind === 'pdf');
   const waves = kind === 'vcd' && !showSource;
   ui.copy.hidden = !currentText || PAGED.has(kind) || waves;
   ui.smaller.hidden = ui.larger.hidden = kind === 'image' || kind === 'svg' || kind === 'binary' || waves;
@@ -357,9 +377,9 @@ function renderSelected() {
     } else if (kind === 'csv') {
       renderCsvView(ui.view, currentText?.text ?? '', extensionOf(node.name) === 'tsv' ? '\t' : ',');
     } else if (kind === 'svg') {
-      renderImage(ui.view, blobUrl(bytes, 'image/svg+xml'), node.name);
+      showImage(node, blobUrl(bytes, 'image/svg+xml'));
     } else if (kind === 'image') {
-      renderImage(ui.view, blobUrl(bytes, imageMime(node.name)), node.name);
+      showImage(node, blobUrl(bytes, imageMime(node.name)));
     } else if (kind === 'pdf') {
       void showPdf(node, bytes, info);
     } else if (kind === 'docx') {
@@ -393,10 +413,11 @@ async function showPdf(node: FileNode, bytes: Uint8Array, info: string[]) {
   ui.view.append(holder);
   const token = viewToken;
   try {
-    const view = await renderPdfView(ui.view, ui.view, bytes, zoom);
+    const view = await renderPdfView(ui.view, ui.view, bytes, zoom, rotationsFor(node));
     if (token !== viewToken) return view.destroy();
     holder.remove();
     zoomView = view;
+    rotatable = view;
     ui.info.textContent = [...info, `${view.pageCount} page${view.pageCount === 1 ? '' : 's'}`].join(' · ');
   } catch (err) {
     if (token !== viewToken) return;
@@ -665,6 +686,7 @@ function setupToolbar() {
     renderSelected();
   });
   ui.wrap.addEventListener('click', () => updateSetting({ wrap: !settings.wrap }));
+  ui.rotate.addEventListener('click', () => rotatable?.rotate());
   ui.smaller.addEventListener('click', () => changeSize(-1));
   ui.larger.addEventListener('click', () => changeSize(1));
   $('copy').addEventListener('click', () => void copy());
@@ -683,6 +705,11 @@ function setupToolbar() {
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') postToPage({ type: 'close' });
+    const typing = (e.target as HTMLElement).closest?.('input, textarea, select, [contenteditable]');
+    if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey && !typing && rotatable) {
+      e.preventDefault();
+      rotatable.rotate();
+    }
   });
 }
 

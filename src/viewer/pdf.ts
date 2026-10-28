@@ -9,12 +9,24 @@ import type { ZoomableView } from './views';
 
 export interface PdfView extends ZoomableView {
   pageCount: number;
+  /** Turn every page a further 90° clockwise. */
+  rotate(): void;
 }
 
 const PAGE_GAP = 12;
 const SIDE_PADDING = 32;
 
-export async function renderPdfView(scroller: HTMLElement, container: HTMLElement, bytes: Uint8Array, zoom: number): Promise<PdfView> {
+/**
+ * `rotations` holds each page's extra clockwise turn in degrees (on top of the PDF's own).
+ * The view updates it in place, so the caller can keep it to reopen the file the same way.
+ */
+export async function renderPdfView(
+  scroller: HTMLElement,
+  container: HTMLElement,
+  bytes: Uint8Array,
+  zoom: number,
+  rotations: number[] = [],
+): Promise<PdfView> {
   const pdfjs = await import('pdfjs-dist');
   // The viewer is an extension page, so this resolves inside the extension package.
   const base = new URL('/pdfjs/', location.href).href;
@@ -37,26 +49,32 @@ export async function renderPdfView(scroller: HTMLElement, container: HTMLElemen
   container.append(pagesEl);
 
   const first = await doc.getPage(1);
-  const baseWidth = first.getViewport({ scale: 1 }).width;
-  const pages: { el: HTMLDivElement; page?: PDFPageProxy; rendered: boolean; cancel?: () => void }[] = [];
-  let scale = 1;
+  const pages: { el: HTMLDivElement; button?: HTMLButtonElement; page?: PDFPageProxy; rendered: boolean; cancel?: () => void }[] = [];
 
-  const fitScale = () => (Math.max(200, scroller.clientWidth - SIDE_PADDING) / baseWidth) * zoom;
+  /** Page `index` turned as the grader chose and scaled to fit the width that way round. */
+  const viewportFor = (index: number) => {
+    // Pages not yet loaded borrow page 1's size until rendered.
+    const page = pages[index]!.page ?? first;
+    const rotation = (page.rotate + (rotations[index] ?? 0)) % 360;
+    const width = page.getViewport({ scale: 1, rotation }).width;
+    const scale = (Math.max(200, scroller.clientWidth - SIDE_PADDING) / width) * zoom;
+    return { viewport: page.getViewport({ scale, rotation }), scale };
+  };
 
   const renderPage = async (index: number) => {
     const slot = pages[index]!;
     if (slot.rendered) return;
     slot.rendered = true;
     slot.page ??= await doc.getPage(index + 1);
-    const viewport = slot.page.getViewport({ scale });
+    const { viewport, scale } = viewportFor(index);
     const dpr = window.devicePixelRatio || 1;
     const canvas = document.createElement('canvas');
     canvas.width = Math.floor(viewport.width * dpr);
     canvas.height = Math.floor(viewport.height * dpr);
     const textLayer = document.createElement('div');
     textLayer.className = 'textLayer';
-    slot.el.replaceChildren(canvas, textLayer);
-    sizePage(slot.el, viewport.width, viewport.height);
+    slot.el.replaceChildren(canvas, textLayer, ...(slot.button ? [slot.button] : []));
+    sizePage(slot.el, viewport.width, viewport.height, scale);
 
     const task = slot.page.render({
       canvas,
@@ -86,18 +104,20 @@ export async function renderPdfView(scroller: HTMLElement, container: HTMLElemen
     { root: scroller, rootMargin: '600px 0px' },
   );
 
-  const layout = () => {
-    scale = fitScale();
-    const firstViewport = first.getViewport({ scale });
-    for (const slot of pages) {
-      slot.cancel?.();
-      slot.rendered = false;
-      slot.el.replaceChildren();
-      // Pages not yet loaded borrow page 1's size until rendered.
-      const vp = slot.page?.getViewport({ scale }) ?? firstViewport;
-      sizePage(slot.el, vp.width, vp.height);
-    }
+  /** Clear a page back to its placeholder size; it renders again when it's next in view. */
+  const resetPage = (index: number) => {
+    const slot = pages[index]!;
+    slot.cancel?.();
+    slot.rendered = false;
+    slot.el.replaceChildren(...(slot.button ? [slot.button] : []));
+    const { viewport, scale } = viewportFor(index);
+    sizePage(slot.el, viewport.width, viewport.height, scale);
+    // Re-observe so a visible page renders again.
+    observer.unobserve(slot.el);
+    observer.observe(slot.el);
   };
+  const layout = () => pages.forEach((_, i) => resetPage(i));
+  const turn = (index: number) => (rotations[index] = ((rotations[index] ?? 0) + 90) % 360);
 
   for (let i = 0; i < doc.numPages; i++) {
     const el = document.createElement('div');
@@ -105,21 +125,33 @@ export async function renderPdfView(scroller: HTMLElement, container: HTMLElemen
     el.dataset.index = String(i);
     el.style.marginBottom = `${PAGE_GAP}px`;
     pagesEl.append(el);
-    pages.push({ el, page: i === 0 ? first : undefined, rendered: false });
+    // With several pages, each gets its own button: often only one scan is sideways.
+    let button: HTMLButtonElement | undefined;
+    if (doc.numPages > 1) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'page-rotate';
+      button.textContent = '↻';
+      button.title = `Rotate page ${i + 1}`;
+      button.setAttribute('aria-label', button.title);
+      button.addEventListener('click', () => {
+        turn(i);
+        resetPage(i);
+      });
+    }
+    pages.push({ el, button, page: i === 0 ? first : undefined, rendered: false });
   }
   layout();
-  for (const slot of pages) observer.observe(slot.el);
 
   return {
     pageCount: doc.numPages,
     setZoom(next) {
       zoom = next;
       layout();
-      // Re-observe so visible pages render again at the new scale.
-      for (const slot of pages) {
-        observer.unobserve(slot.el);
-        observer.observe(slot.el);
-      }
+    },
+    rotate() {
+      pages.forEach((_, i) => turn(i));
+      layout();
     },
     destroy() {
       observer.disconnect();
@@ -129,7 +161,7 @@ export async function renderPdfView(scroller: HTMLElement, container: HTMLElemen
     },
   };
 
-  function sizePage(el: HTMLElement, width: number, height: number) {
+  function sizePage(el: HTMLElement, width: number, height: number, scale: number) {
     el.style.width = `${Math.floor(width)}px`;
     el.style.height = `${Math.floor(height)}px`;
     el.style.setProperty('--total-scale-factor', String(scale));

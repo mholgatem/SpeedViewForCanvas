@@ -261,6 +261,52 @@ test('shows VCD waveforms laid out by a .gtkw, and keeps an edited layout for th
   await page.close();
 });
 
+test('rotates images and PDF pages', async () => {
+  const page = await context.newPage();
+  const viewer = await openSpeedGrader(page, '6');
+  await expect(viewer.locator('.tree .node')).toHaveCount(2);
+  const box = (selector: string, index = 0) =>
+    viewer.locator(selector).nth(index).evaluate((el) => {
+      const { width, height } = el.getBoundingClientRect();
+      return width > height ? 'wide' : 'tall';
+    });
+
+  // An image: the toolbar button and the R key each turn it 90° clockwise.
+  await row(viewer, 'sideways.svg').click();
+  await expect.poll(() => box('.image-frame')).toBe('wide');
+  await viewer.locator('#rotate').click();
+  await expect.poll(() => box('.image-frame')).toBe('tall');
+  // The picture keeps its own proportions (before the turn) and fills the frame once turned.
+  const picture = () => viewer.locator('.image-view').evaluate((el: HTMLElement) => [el.offsetWidth, el.offsetHeight]);
+  const frame = () => viewer.locator('.image-frame').evaluate((el: HTMLElement) => [el.offsetHeight, el.offsetWidth]);
+  expect(await picture()).toEqual(await frame());
+  await page.screenshot({ path: 'test-results/rotate-image.png' });
+  await viewer.locator('body').press('r');
+  await expect.poll(() => box('.image-frame')).toBe('wide');
+  await expect(viewer.locator('.image-frame')).toHaveAttribute('style', /--rotation: 180deg/);
+
+  // A PDF: one page on its own, or every page from the toolbar.
+  await row(viewer, 'scan.pdf').click();
+  await expect(viewer.locator('.pdf-page')).toHaveCount(2);
+  await expect.poll(() => box('.pdf-page', 1)).toBe('tall');
+  await viewer.locator('.pdf-page').nth(1).hover();
+  await viewer.getByRole('button', { name: 'Rotate page 2' }).click();
+  await expect.poll(() => box('.pdf-page', 1)).toBe('wide');
+  await expect.poll(() => box('.pdf-page', 0)).toBe('tall');
+  await expect(viewer.locator('.pdf-page').nth(1).locator('.textLayer')).toContainText('Page two');
+  await viewer.locator('#rotate').click();
+  await expect.poll(() => box('.pdf-page', 0)).toBe('wide');
+  await expect.poll(() => box('.pdf-page', 1)).toBe('tall');
+  await page.screenshot({ path: 'test-results/rotate-pdf.png' });
+
+  // Going back to a file keeps how it was turned.
+  await row(viewer, 'sideways.svg').click();
+  await expect(viewer.locator('.image-frame')).toHaveAttribute('style', /--rotation: 180deg/);
+  await row(viewer, 'scan.pdf').click();
+  await expect.poll(() => box('.pdf-page', 0)).toBe('wide');
+  await page.close();
+});
+
 test('reloads when SpeedGrader switches students and auto-opens a single file', async () => {
   const page = await context.newPage();
   const viewer = await openSpeedGrader(page);

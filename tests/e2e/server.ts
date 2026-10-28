@@ -35,6 +35,27 @@ const pdf = [
   '%%EOF',
 ].join('\n');
 
+// Two portrait pages, for rotating one page or all of them.
+const scanPdf = [
+  '%PDF-1.4',
+  '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj',
+  '2 0 obj<</Type/Pages/Kids[3 0 R 6 0 R]/Count 2>>endobj',
+  '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 144 300]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj',
+  '4 0 obj<</Length 41>>stream',
+  'BT /F1 18 Tf 20 150 Td (Page one) Tj ET',
+  'endstream endobj',
+  '5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj',
+  '6 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 144 300]/Contents 7 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj',
+  '7 0 obj<</Length 41>>stream',
+  'BT /F1 18 Tf 20 150 Td (Page two) Tj ET',
+  'endstream endobj',
+  'trailer<</Root 1 0 R>>',
+  '%%EOF',
+].join('\n');
+
+const sidewaysSvg =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="#cde"/><text x="20" y="60" font-size="30">Answer</text></svg>';
+
 const innerTgz = gzipSync(makeTar({ 'docs/notes.md': '# Notes\n\nSome **bold** text.' }));
 
 export const FILES: Record<string, { name: string; data: Uint8Array }> = {
@@ -59,6 +80,8 @@ export const FILES: Record<string, { name: string; data: Uint8Array }> = {
     data: zipSync({ 'lab4/counter.vcd': strToU8(COUNTER_VCD), 'lab4/counter.gtkw': strToU8(COUNTER_GTKW) }),
   },
   '20': { name: 'solo.py', data: strToU8('x = 1\n') },
+  '40': { name: 'scan.pdf', data: strToU8(scanPdf) },
+  '41': { name: 'sideways.svg', data: strToU8(sidewaysSvg) },
   '30': { name: 'lab4_dump.vcd', data: strToU8(COUNTER_VCD.replace(/module tb/, 'module testbench')) },
 };
 
@@ -66,6 +89,7 @@ const SUBMISSIONS: Record<string, string[]> = {
   '3': ['10', '11', '12', '13', '14', '15', '16', '17'],
   '4': ['20'],
   '5': ['30'],
+  '6': ['40', '41'],
 };
 
 function speedGraderHtml(): string {
