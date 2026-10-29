@@ -110,6 +110,8 @@ jobs:
           name: store-zips
           path: .output/speedview-for-canvas-${{ steps.version.outputs.version }}-*.zip
           if-no-files-found: error
+          # .output starts with a dot, and upload-artifact skips hidden folders by default.
+          include-hidden-files: true
 
       - name: Commit, tag, and create the GitHub release
         if: ${{ !inputs.dry_run }}
