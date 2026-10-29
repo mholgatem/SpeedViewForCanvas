@@ -209,7 +209,8 @@ jobs:
         run: |
           # Release notes for users, and the build steps and lint explanations for reviewers.
           node -e '
-            const [notes, version] = process.argv.slice(1);
+            // Read from the environment: notes starting with "-" would look like node options.
+            const { NOTES: notes, VERSION: version } = process.env;
             const approval = [
               "Build: Node.js 20+ (CI uses Node 24). Run `npm ci` then `npm run build:firefox`; output is .output/firefox-mv3/.",
               "Bundled with WXT (Vite). Libraries are installed from npm at the versions in package-lock.json.",
@@ -218,7 +219,7 @@ jobs:
             ].join("\n");
             const metadata = { version: { approval_notes: approval, release_notes: { "en-US": notes || `SpeedView for Canvas v${version}` } } };
             require("fs").writeFileSync("amo-metadata.json", JSON.stringify(metadata, null, 2));
-          ' "$NOTES" "$VERSION"
+          '
           npx wxt submit $DRY_RUN_FLAG \
             --firefox-zip "zips/speedview-for-canvas-$VERSION-firefox.zip" \
             --firefox-sources-zip "zips/speedview-for-canvas-$VERSION-sources.zip" \
