@@ -2,7 +2,7 @@
   "name": "speedview-for-canvas",
   "description": "View code, notebooks, and archives directly in Canvas SpeedGrader. Everything stays in your browser.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
