@@ -163,7 +163,16 @@ jobs:
           CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
           CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
-        run: npx wxt submit $DRY_RUN_FLAG --chrome-zip "zips/speedview-for-canvas-$VERSION-chrome.zip"
+        run: |
+          # The key is usually pasted from the JSON file, as one line with literal "\n"s (and
+          # maybe its quotes). Node needs real line breaks, so convert either form.
+          KEY="$CHROME_SERVICE_ACCOUNT_PRIVATE_KEY"
+          KEY="${KEY#\"}"
+          KEY="${KEY%\"}"
+          LITERAL='\n'
+          NEWLINE=$'\n'
+          export CHROME_SERVICE_ACCOUNT_PRIVATE_KEY="${KEY//"$LITERAL"/"$NEWLINE"}"
+          npx wxt submit $DRY_RUN_FLAG --chrome-zip "zips/speedview-for-canvas-$VERSION-chrome.zip"
 
   firefox:
     needs: build
