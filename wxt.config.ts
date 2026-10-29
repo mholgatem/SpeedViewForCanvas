@@ -46,8 +46,9 @@ const E2E = !!process.env.SPEEDVIEW_E2E;
 export default defineConfig({
   manifestVersion: 3,
   ...(E2E && { outDirTemplate: 'e2e-{{browser}}-mv{{manifestVersion}}' }),
-  // Playwright output (screenshots of the fake Canvas) doesn't belong in the AMO source upload.
-  zip: { excludeSources: ['test-results/**', 'playwright-report/**'] },
+  // Playwright output, store listing screenshots, and store credentials don't belong in
+  // the AMO source upload.
+  zip: { excludeSources: ['test-results/**', 'playwright-report/**', 'Screenshots/**', '.env', '.env.*'] },
   hooks: {
     'build:publicAssets': (_wxt, files) => addPdfJsAssets(files),
   },
