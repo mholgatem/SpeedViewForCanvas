@@ -14,11 +14,6 @@
         <p class="muted">Settings are saved automatically.</p>
       </header>
 
-      <section id="setup-banner" class="banner" hidden>
-        <strong>Welcome!</strong> Add your school's Canvas address below (for example
-        <code>canvas.asu.edu</code>) so SpeedView can run in SpeedGrader.
-      </section>
-
       <section>
         <h2>Canvas sites</h2>
         <p class="muted">
@@ -26,10 +21,22 @@
           approve access when you add one.
         </p>
         <ul id="domain-list" class="domain-list"></ul>
-        <form id="domain-form" class="row">
-          <input id="domain-input" type="text" placeholder="canvas.yourschool.edu" autocomplete="off" spellcheck="false" />
-          <button type="submit">Add site</button>
-        </form>
+        <div class="tip-anchor">
+          <form id="domain-form" class="row">
+            <input id="domain-input" type="text" placeholder="canvas.yourschool.edu" autocomplete="off" spellcheck="false" />
+            <button type="submit">Add site</button>
+          </form>
+          <div id="domain-tip" class="tip" role="dialog" aria-describedby="domain-tip-text" hidden>
+            <p id="domain-tip-text">
+              If you don't see the SpeedView drawer in SpeedGrader, then you likely need to add your
+              school's custom canvas URL.
+            </p>
+            <div class="tip-actions">
+              <label><input id="domain-tip-never" type="checkbox" /> Don't show this again</label>
+              <button id="domain-tip-ok" type="button">OK</button>
+            </div>
+          </div>
+        </div>
         <p id="domain-error" class="error" hidden></p>
       </section>
 
@@ -42,9 +49,18 @@
             <option value="light">Light</option>
             <option value="dark">Dark</option>
           </select>
-          <label for="fontSize">Font size (px)</label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Code viewer appearance</h2>
+        <div class="grid">
+          <label for="fontSize">
+            Code font size (px)
+            <small class="hint">Also used for the hex view and code blocks in Markdown and notebooks.</small>
+          </label>
           <input id="fontSize" type="number" min="8" max="32" data-setting="fontSize" />
-          <label for="tabWidth">Tab width</label>
+          <label for="tabWidth">Tab width (spaces)</label>
           <input id="tabWidth" type="number" min="1" max="16" data-setting="tabWidth" />
           <label for="wrap">Wrap long lines</label>
           <input id="wrap" type="checkbox" data-setting="wrap" />
@@ -89,7 +105,7 @@
         <h2>Waveform layouts</h2>
         <p class="muted">
           GTKWave signal lists you saved in the waveform viewer, by assignment. They hold only signal
-          names and display settings, and stay in this browser. Delete them when you no longer need them.
+          names and display settings, and stay in this browser. Delete them when no longer needed.
         </p>
         <div id="layouts" class="layouts"></div>
       </section>
