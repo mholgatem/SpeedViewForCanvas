@@ -9,11 +9,39 @@ import {
   parseAssignmentKey,
   type AssignmentLayouts,
 } from '@/src/settings/savedLayouts';
-import { loadSettings, saveSettings } from '@/src/settings/storage';
+import { loadSettings, onSettingsChanged, saveSettings } from '@/src/settings/storage';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
+const DEFAULT_DOMAIN = '*.instructure.com';
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+
 let settings: Settings;
+/** The custom-URL tip was closed with OK during this page visit. */
+let domainTipClosed = false;
+
+/** Same resolution as the viewer: an explicit Theme wins, "Match system" follows the OS. */
+function applyTheme() {
+  const dark = settings.theme === 'dark' || (settings.theme === 'auto' && systemDark.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+}
+
+function updateDomainTip() {
+  const onlyDefault = settings.domains.length === 1 && settings.domains[0] === DEFAULT_DOMAIN;
+  $('domain-tip').hidden = !onlyDefault || settings.dismissedDomainTip || domainTipClosed;
+}
+
+function setupDomainTip() {
+  $('domain-tip-ok').addEventListener('click', () => {
+    domainTipClosed = true;
+    if ($<HTMLInputElement>('domain-tip-never').checked) {
+      settings.dismissedDomainTip = true;
+      void saveSettings({ dismissedDomainTip: true });
+    }
+    updateDomainTip();
+    $<HTMLInputElement>('domain-input').focus();
+  });
+}
 
 async function renderDomains() {
   const list = $<HTMLUListElement>('domain-list');
@@ -54,7 +82,7 @@ async function renderDomains() {
     li.append(remove);
     list.append(li);
   }
-  $('setup-banner').hidden = settings.domains.some((d) => d !== '*.instructure.com');
+  updateDomainTip();
 }
 
 function setupDomainForm() {
@@ -105,6 +133,7 @@ function setupSimpleSettings() {
         el.value = String(next);
       } else next = el.value;
       (settings as unknown as Record<string, unknown>)[key] = next;
+      if (key === 'theme') applyTheme();
       void saveSettings({ [key]: next });
     });
   }
@@ -235,6 +264,16 @@ async function renderLayouts() {
 
 async function init() {
   settings = await loadSettings();
+  applyTheme();
+  systemDark.addEventListener('change', applyTheme);
+  // Theme can also change from the viewer's toolbar; follow it live.
+  onSettingsChanged((next) => {
+    if (next.theme === settings.theme) return;
+    settings.theme = next.theme;
+    $<HTMLSelectElement>('theme').value = next.theme;
+    applyTheme();
+  });
+  setupDomainTip();
   setupDomainForm();
   setupSimpleSettings();
   setupOverrides();

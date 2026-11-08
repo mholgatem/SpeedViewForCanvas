@@ -1,5 +1,7 @@
+/* Light tokens by default; dark when the Theme setting says so (data-theme, set by main.ts)
+   or, before main.ts runs / with "Match system", when the OS prefers dark. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #ffffff;
   --fg: #1f2328;
   --muted: #59636e;
@@ -7,10 +9,12 @@
   --accent: #0b6bcb;
   --error: #c62828;
   --ok: #2e7d32;
-  --banner: #e8f1fb;
+  --tip-bg: #ffffff;
+  --tip-shadow: rgba(0, 0, 0, 0.18);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
     --bg: #16191d;
     --fg: #e6e8eb;
     --muted: #9aa4af;
@@ -18,8 +22,21 @@
     --accent: #5aa7f0;
     --error: #ef8a8a;
     --ok: #81c784;
-    --banner: #1d2a38;
+    --tip-bg: #222830;
+    --tip-shadow: rgba(0, 0, 0, 0.5);
   }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #16191d;
+  --fg: #e6e8eb;
+  --muted: #9aa4af;
+  --border: #343a42;
+  --accent: #5aa7f0;
+  --error: #ef8a8a;
+  --ok: #81c784;
+  --tip-bg: #222830;
+  --tip-shadow: rgba(0, 0, 0, 0.5);
 }
 * { box-sizing: border-box; }
 body {
@@ -34,7 +51,6 @@ h2 { font-size: 16px; margin: 0 0 8px; }
 section { padding: 16px 0; border-top: 1px solid var(--border); }
 header { padding-bottom: 12px; }
 .muted { color: var(--muted); margin: 4px 0 12px; }
-.banner { background: var(--banner); border: 1px solid var(--accent); border-radius: 6px; padding: 12px; margin-bottom: 16px; }
 .error { color: var(--error); margin: 8px 0 0; }
 code { font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace; font-size: 0.95em; }
 input, select, textarea, button { font: inherit; color: inherit; }
@@ -44,6 +60,10 @@ input[type='text'], input[type='number'], select, textarea {
   border-radius: 4px;
   padding: 4px 8px;
 }
+/* Native dropdown popups use the option colors; a transparent select leaves them OS-white. */
+select { background: var(--bg); }
+option { background: var(--bg); color: var(--fg); }
+.hint { display: block; color: var(--muted); font-size: 12px; }
 textarea { width: 100%; font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace; }
 button {
   background: var(--accent);
@@ -67,6 +87,34 @@ button.secondary { background: transparent; color: var(--accent); border: 1px so
   border-bottom: 1px solid var(--border);
 }
 .domain-list .name { flex: 1; font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace; overflow-wrap: anywhere; }
+.tip-anchor { position: relative; }
+.tip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 10;
+  max-width: 360px;
+  background: var(--tip-bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 14px var(--tip-shadow);
+}
+.tip[hidden] { display: none; }
+/* Arrow pointing up at the site input: border-colored triangle with a background-colored one on top. */
+.tip::before,
+.tip::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  border: 8px solid transparent;
+  border-top: 0;
+}
+.tip::before { top: -8px; border-bottom-color: var(--accent); }
+.tip::after { top: -7px; border-bottom-color: var(--tip-bg); }
+.tip p { margin: 0 0 10px; }
+.tip-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tip-actions label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .status-ok { color: var(--ok); }
 .status-missing { color: var(--error); }
 button.danger { background: var(--error); color: #fff; }

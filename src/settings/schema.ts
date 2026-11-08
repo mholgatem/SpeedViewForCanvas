@@ -22,6 +22,8 @@ export interface Settings {
   archiveMaxDepth: number;
   /** File extension (lowercase, no dot) -> highlight.js language name. */
   languageOverrides: Record<string, string>;
+  /** The settings-page tip about adding a custom Canvas URL was dismissed for good. */
+  dismissedDomainTip: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -40,4 +42,5 @@ export const DEFAULT_SETTINGS: Settings = {
   archiveMaxTotalMB: 200,
   archiveMaxDepth: 3,
   languageOverrides: {},
+  dismissedDomainTip: false,
 };
