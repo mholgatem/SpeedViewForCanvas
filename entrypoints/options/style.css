@@ -47,6 +47,7 @@ body {
 }
 main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
 h1 { font-size: 22px; margin: 0; }
+.version { font-size: 13px; font-weight: normal; color: var(--muted); margin-left: 6px; }
 h2 { font-size: 16px; margin: 0 0 8px; }
 section { padding: 16px 0; border-top: 1px solid var(--border); }
 header { padding-bottom: 12px; }

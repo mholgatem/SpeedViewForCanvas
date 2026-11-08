@@ -263,6 +263,7 @@ async function renderLayouts() {
 }
 
 async function init() {
+  $('version').textContent = `v${browser.runtime.getManifest().version}`;
   settings = await loadSettings();
   applyTheme();
   systemDark.addEventListener('change', applyTheme);
